@@ -10,6 +10,6 @@ namespace ServiEnviaApp.Models
         public string lastName { get; set; }
         public DateTime birthDate { get; set; }
         public string email { get; set; }
-        //public ICollection<Order> Orders { get; set; }
+        //public ICollection<OrderWindow> Orders { get; set; }
     }
 }

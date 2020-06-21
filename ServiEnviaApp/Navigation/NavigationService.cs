@@ -1,4 +1,4 @@
-﻿namespace ServiEnviaApp
+﻿namespace ServiEnviaApp.Navigation
 {
     using Microsoft.Extensions.DependencyInjection;
     using System;
@@ -9,18 +9,19 @@
     {
         Task ActivateAsync(object parameter);
     }
+
     public class NavigationService
     {
-        private readonly IServiceProvider serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         public NavigationService(IServiceProvider serviceProvider)
         {
-            this.serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task ShowAsync<T>(object parameter = null) where T : Window
         {
-            var window = serviceProvider.GetRequiredService<T>();
+            var window = _serviceProvider.GetRequiredService<T>();
             if (window is IActivable activableWindow)
             {
                 await activableWindow.ActivateAsync(parameter);

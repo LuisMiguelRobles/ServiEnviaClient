@@ -1,15 +1,19 @@
-﻿using ServiEnviaApp.Models;
-using System;
-using System.Collections.ObjectModel;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Linq;
+using System.Net;
+using ServiEnviaApp.Navigation;
 
 namespace ServiEnviaApp
 {
+    using ServiEnviaApp.Models;
+    using System;
+    using System.Collections.ObjectModel;
+    using System.Net.Http;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+
     /// <summary>
     /// Lógica de interacción para CustomerWindow.xaml
     /// </summary>
@@ -18,7 +22,7 @@ namespace ServiEnviaApp
         private readonly IHttpClientFactory _clientFactory;
         private ObservableCollection<Customer> Customers { get;  set; }
 
-        public CustomerWindow(IHttpClientFactory clientFactory, HttpClient httpClient)
+        public CustomerWindow(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
 
@@ -71,13 +75,18 @@ namespace ServiEnviaApp
             using var httpResponse =
                 await client.PostAsync( "Customer", content);
 
+            MessageBox.Show(httpResponse.StatusCode == HttpStatusCode.OK
+                ? "Customer added"
+                : $"{httpResponse.StatusCode}");
+
+
             httpResponse.EnsureSuccessStatusCode();
             
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.SearchCustomer(CustomerDocument.Text);
+            _ = this.SearchCustomer(CustomerDocument.Text);
         }
 
         private async Task SearchCustomer(string document)
@@ -91,13 +100,19 @@ namespace ServiEnviaApp
             {
                 await using var responseStream = await response.Content.ReadAsStreamAsync();
                 var customer = await JsonSerializer.DeserializeAsync<Customer>(responseStream);
-                MessageBox.Show(customer.ToString());
+                MessageBox.Show(this.CustomerData(customer));
             }
             else
             {
                 MessageBox.Show("Not found");
             }
 
+        }
+
+
+        private string CustomerData(Customer customer)
+        {
+            return $"Document:{customer.document}, Full Name: {customer.firstName} {customer.lastName}";
         }
     }
 }

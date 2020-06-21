@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System.Net.Http.Headers;
+using ServiEnviaApp.Windows;
 
 namespace ServiEnviaApp
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Navigation;
+    using System;
+    using System.Windows;
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
@@ -27,17 +26,17 @@ namespace ServiEnviaApp
             services.AddScoped<NavigationService>();
             services.AddTransient<MainWindow>();
             services.AddTransient<CustomerWindow>();
+            services.AddTransient<OrderWindow>();
             
             services.AddHttpClient("API", c =>
             {
                 c.BaseAddress = new Uri("https://localhost:44332/api/");
+                c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
         }
 
         private void OnStartUp(Object sender, StartupEventArgs eventArgs)
         {
-            //var mainWindow = _provider.GetService<MainWindow>();
-            //mainWindow.Show();
             var navigationService = _provider.GetRequiredService<NavigationService>();
             var task = navigationService.ShowAsync<MainWindow>();
         }
