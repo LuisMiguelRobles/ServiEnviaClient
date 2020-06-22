@@ -1,10 +1,7 @@
-﻿using System.Linq;
-using System.Net;
-using ServiEnviaApp.Navigation;
-
-namespace ServiEnviaApp
+﻿namespace ServiEnviaApp
 {
-    using ServiEnviaApp.Models;
+    using Models;
+    using Navigation;
     using System;
     using System.Collections.ObjectModel;
     using System.Net.Http;
@@ -17,18 +14,18 @@ namespace ServiEnviaApp
     /// <summary>
     /// Lógica de interacción para CustomerWindow.xaml
     /// </summary>
-    public partial class CustomerWindow : Window , IActivable
+    public partial class CustomerWindow : Window, IActivable
     {
         private readonly IHttpClientFactory _clientFactory;
-        private ObservableCollection<Customer> Customers { get;  set; }
+        private readonly HttpClient _client;
+        private ObservableCollection<Customer> Customers { get; set; }
 
         public CustomerWindow(IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
 
+            _client = _clientFactory.CreateClient("API");
             InitializeComponent();
-
-            DataGrid.DataContext = GetCustomers();
 
         }
 
@@ -37,7 +34,7 @@ namespace ServiEnviaApp
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "Customer");
             var client = _clientFactory.CreateClient("API");
-            
+
             var response = await client.SendAsync(request);
 
             await using var responseStream = await response.Content.ReadAsStreamAsync();
@@ -51,7 +48,7 @@ namespace ServiEnviaApp
             return Task.CompletedTask;
         }
 
-        private void Add_Customer_OnClick(object sender, RoutedEventArgs e)
+        private async void Add_Customer_OnClick(object sender, RoutedEventArgs e)
         {
             var customer = new Customer
             {
@@ -62,45 +59,43 @@ namespace ServiEnviaApp
                 birthDate = BirthDate.SelectedDate ?? DateTime.Now
             };
 
-            CreateItemAsync(customer);
+            await CreateItemAsync(customer);
         }
 
 
         private async Task CreateItemAsync(Customer customer)
         {
-            var client = _clientFactory.CreateClient("API");
-
             var content = new StringContent(JsonSerializer.Serialize(customer), Encoding.UTF8, "application/json");
 
             using var httpResponse =
-                await client.PostAsync( "Customer", content);
-
-            MessageBox.Show(httpResponse.StatusCode == HttpStatusCode.OK
-                ? "Customer added"
-                : $"{httpResponse.StatusCode}");
-
-
-            httpResponse.EnsureSuccessStatusCode();
+                await _client.PostAsync("Customer", content);
             
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                MessageBox.Show("Customer Added");
+                await GetCustomers();
+            }
+            else
+            {
+                MessageBox.Show($"{httpResponse.StatusCode}");
+            }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Search_Click(object sender, RoutedEventArgs e)
         {
-            _ = this.SearchCustomer(CustomerDocument.Text);
+            await SearchCustomer(TxtSearch.Text);
         }
 
         private async Task SearchCustomer(string document)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get,  $"Customer/{document}");
-            var client = _clientFactory.CreateClient("API");
-
-            var response = await client.SendAsync(request);
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Customer/{document}");
+            var response = await _client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
                 await using var responseStream = await response.Content.ReadAsStreamAsync();
                 var customer = await JsonSerializer.DeserializeAsync<Customer>(responseStream);
-                MessageBox.Show(this.CustomerData(customer));
+                MessageBox.Show(customer.ToString());
             }
             else
             {
@@ -109,10 +104,10 @@ namespace ServiEnviaApp
 
         }
 
-
-        private string CustomerData(Customer customer)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            return $"Document:{customer.document}, Full Name: {customer.firstName} {customer.lastName}";
+            DataGrid.DataContext = GetCustomers();
         }
+
     }
 }

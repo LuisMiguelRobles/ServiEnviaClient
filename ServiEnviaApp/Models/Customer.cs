@@ -11,5 +11,11 @@ namespace ServiEnviaApp.Models
         public DateTime birthDate { get; set; }
         public string email { get; set; }
         //public ICollection<OrderWindow> Orders { get; set; }
+
+
+        public override string ToString()
+        {
+            return $"Document: {document}, Full Name:{firstName} {lastName}";
+        }
     }
 }
