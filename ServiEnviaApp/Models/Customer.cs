@@ -4,7 +4,7 @@ namespace ServiEnviaApp.Models
 {
     public class Customer
     {
-        public Guid Id { get; set; }
+        public Guid id { get; set; }
         public string document { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
